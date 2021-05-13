@@ -31,3 +31,4 @@ message(STATUS "CXX_FLAGS_DEBUG are ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "CXX_FLAGS_RELEASE are ${CMAKE_CXX_FLAGS_RELEASE}")
 
 add_executable(main main.cpp)
+add_executable(sample sample.cpp)
