@@ -72,7 +72,9 @@ constexpr auto capacity = constexpr_doublearray::get_capacity(words);
 constexpr auto dict = constexpr_doublearray::make<capacity>(words);
 ```
 
-*Note:* The double array contains some vacant elements, and the actual number (i.e., the array capacity) is not known until it is constructed. To avoid dynamic sizing at compile time, `get_capacity` estimates the capacity from input words. So, depending on the estimate, the construction may fail. If this happens, please increase the value of `RESERVE_FACTOR`. If you know of a more elegant way to do this, could you please let me know?
+*Note:* The double array can contain some vacant elements, and the actual number (i.e., the array capacity) is not known until it is constructed. To avoid dynamic sizing at compile time, `get_capacity` estimates the capacity from input words. So, depending on the estimate, the construction may fail. If this happens, please increase the value of `RESERVE_FACTOR`. However, the larger the value, the larger the memory consumption will be.
+
+If you know of a more elegant way to do this, could you please let me know?
 
 ### Simple search
 
