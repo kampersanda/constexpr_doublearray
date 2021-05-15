@@ -7,7 +7,7 @@ import sys
 
 def main():
     txt_fn = sys.argv[1]
-    hpp_fn = txt_fn + '.hpp'
+    hpp_fn = 'dataset.hpp'
 
     fout = open(hpp_fn, 'wb')
     fout.write(b'#pragma once\n')

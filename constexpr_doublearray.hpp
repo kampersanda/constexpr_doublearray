@@ -17,6 +17,7 @@ using static_vector = std::experimental::fixed_capacity_vector<T, Capacity>;
 
 static constexpr double RESERVE_FACTOR = 1.1;
 static constexpr char END_MARKER = '\000';
+static constexpr auto NOT_FOUND = std::numeric_limits<std::size_t>::max();
 
 struct unit_type {
     using int_type = int32_t;
@@ -76,6 +77,15 @@ constexpr auto text_to_words(const std::string_view& text) {
         b_itr = e_itr;
     }
     return words;
+}
+
+template <class Words>
+constexpr std::size_t get_max_length(const Words& words) {
+    std::size_t max_length = 0;
+    for (const auto& w : words) {
+        max_length = std::max(max_length, std::size(w));
+    }
+    return max_length;
 }
 
 }  // namespace utils
@@ -172,7 +182,7 @@ class builder {
         }
 
         const auto base = xcheck();
-        if (base == std::numeric_limits<std::size_t>::max()) {
+        if (base == NOT_FOUND) {
             throw std::logic_error("The capacity is not enough. Increase RESERVE_FACTOR.");
         }
 
@@ -202,7 +212,7 @@ class builder {
 
         const std::size_t epos = m_units[0].check;
         if (epos == 0) {
-            return std::numeric_limits<std::size_t>::max();
+            return NOT_FOUND;
         }
 
         std::size_t npos = epos;
@@ -215,7 +225,7 @@ class builder {
             npos = -1 * m_units[npos].base;
         } while (npos != epos);
 
-        return std::numeric_limits<std::size_t>::max();
+        return NOT_FOUND;
     }
 
     constexpr bool is_target(const std::size_t base) {
@@ -287,13 +297,13 @@ constexpr search_result search(const Word& word, const Units& units) {
     for (; depth < std::size(word); depth++) {
         const std::size_t cpos = units[npos].base ^ static_cast<std::size_t>(word[depth]);
         if (units[cpos].check != npos) {
-            return {std::numeric_limits<std::size_t>::max(), npos, depth};
+            return {NOT_FOUND, npos, depth};
         }
         npos = cpos;
     }
     const std::size_t cpos = units[npos].base;  // ^END_MARKER
     if (units[cpos].check != npos) {
-        return {std::numeric_limits<std::size_t>::max(), npos, depth};
+        return {NOT_FOUND, npos, depth};
     }
     return {static_cast<std::size_t>(units[cpos].base), cpos, depth + 1};
 }
