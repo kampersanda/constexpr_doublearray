@@ -401,9 +401,13 @@ constexpr auto decode(std::size_t npos, const Units& units) {
     if (units[npos].check < 0) {
         return word;
     }
+
     while (npos != 0) {
         const std::size_t ppos = units[npos].check;
-        word.push_back(static_cast<char>(units[ppos].base ^ npos));
+        const char c = static_cast<char>(units[ppos].base ^ npos);
+        if (c != END_MARKER) {
+            word.push_back(c);
+        }
         npos = ppos;
     }
     utils::reverse(word.begin(), word.end());
