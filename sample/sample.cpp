@@ -44,9 +44,9 @@ int main() {
     std::cout << "search(SIGMOD) = " << sigmod_sr.id << std::endl;
     std::cout << "search(SIGKDD) = " << sigkdd_sr.id << std::endl;
 
-    std::cout << "decode(icde_dec) = ";
+    std::cout << "decode(icde_sr) = ";
     std::cout << std::string(std::begin(icde_dec), std::end(icde_dec)) << std::endl;
-    std::cout << "decode(sigmod_dec) = ";
+    std::cout << "decode(sigmod_sr) = ";
     std::cout << std::string(std::begin(sigmod_dec), std::end(sigmod_dec)) << std::endl;
 
     std::cout << "common_prefix_search(ICDMW) = ";
