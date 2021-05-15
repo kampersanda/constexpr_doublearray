@@ -49,17 +49,19 @@ int main() {
     std::cout << "decode(sigmod_dec) = ";
     std::cout << std::string(std::begin(sigmod_dec), std::end(sigmod_dec)) << std::endl;
 
-    std::cout << "common_prefix_search(ICDMW) =" << std::endl;
+    std::cout << "common_prefix_search(ICDMW) = ";
     for (auto r : icdmw_cpsr) {
         const auto dec = constexpr_doublearray::decode<std::size("ICDMW"sv)>(r.npos, dict);
-        std::cout << "\t(id=" << r.id << ", str=" << std::string(std::begin(dec), std::end(dec)) << ")," << std::endl;
+        std::cout << "(id=" << r.id << ",str=" << std::string(std::begin(dec), std::end(dec)) << "), ";
     }
+    std::cout << std::endl;
 
-    std::cout << "predictive_search(SIG) =" << std::endl;
+    std::cout << "predictive_search(SIG) = ";
     for (auto r : sig_psr) {
         const auto dec = constexpr_doublearray::decode<decode_size>(r.npos, dict);
-        std::cout << "\t(id=" << r.id << ", str=" << std::string(std::begin(dec), std::end(dec)) << ")," << std::endl;
+        std::cout << "(id=" << r.id << ",str=" << std::string(std::begin(dec), std::end(dec)) << "), ";
     }
+    std::cout << std::endl;
 
     return 0;
 }
