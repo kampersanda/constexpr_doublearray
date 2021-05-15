@@ -2,7 +2,7 @@
 
 ## What is this?
 
-This library implements a double-array trie of **compile-time constants** using `constexpr` of C++17.
+This library implements a double-array trie of **compile-time constants** using `constexpr` in C++17.
 
 As you know, compile-time computation is awesome. Also, the double array is awesome. Hence, this library is awesome (QED).
 
