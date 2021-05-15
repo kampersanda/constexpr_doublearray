@@ -5,7 +5,7 @@
 
 using namespace std::string_view_literals;
 
-// Input words concatenated by NULL character (in string_view)
+// Input words concatenated by NULL character (must be sorted)
 constexpr auto text = "ICDE\0"
                       "ICDM\0"
                       "ICDMW\0"
