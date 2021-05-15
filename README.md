@@ -167,3 +167,43 @@ predictive_search(SIG) = (id=4,str=SIGIR), (id=5,str=SIGMOD),
 
 ## Demo
 
+`demo.cpp` provides a command line tool, which shows query results for the dataset defined in  `dataset.hpp`.
+
+```shell
+$ ./demo
+Query modes:
+ - 1: search
+ - 2: common_prefix_search
+ - 3: predictive_search
+ - others: exit
+Input query mode (int):
+> 1
+Input query word (string):
+> university_of_tokushima
+id = 745
+Input query mode (int):
+> 2                
+Input query word (string):
+> kyushu_university_of_health_and_welfare
+1: id = 329, str = kyushu_university
+2: id = 330, str = kyushu_university_of_health_and_welfare
+Input query mode (int):
+> 3
+Input query word (string):
+> japan
+1: id = 180, str = japan_advanced_institute_of_science_and_technology
+2: id = 181, str = japan_christian_junior_college
+3: id = 182, str = japan_lutheran_college
+4: id = 183, str = japan_red_cross_aichi_junior_college_of_nursing
+5: id = 184, str = japanese_red_cross_college_of_nursing
+Input query mode (int):
+> 0
+Good bye!!
+```
+
+Through Python script `txt2hpp.py`, you can produce `dataset.hpp` from a text file with line-separated words.
+
+```shell
+$ python txt2hpp.py univs.txt
+```
+
