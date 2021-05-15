@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "constexpr_doublearray.hpp"
+#include <constexpr_doublearray.hpp>
 
 using namespace std::string_view_literals;
 

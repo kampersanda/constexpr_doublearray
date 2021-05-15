@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include "constexpr_doublearray.hpp"
+#include <constexpr_doublearray.hpp>
+
 #include "dataset.hpp"
 
 // Text -> Array<Word>

@@ -31,7 +31,7 @@ The code is written in C++17, so please install g++ >= 7.0 or clang >= 4.0. For 
 
 Currently, the code has been tested only on Mac OS X with AppleClang 12.0.0.
 
-## Sample usage
+## Sample
 
  `sample.cpp` provides a sample code, which works as follows.
 
@@ -102,6 +102,13 @@ int main() {
 }
 ```
 
+The output will be
+
+```
+decode(icde_dec) = ICDE
+decode(sigmod_dec) = SIGMOD
+```
+
 ### Common prefix search
 
 ```c++
@@ -113,6 +120,14 @@ constexpr auto icdmw_cpsr = constexpr_doublearray::common_prefix_search<5>("ICDM
         const auto dec = constexpr_doublearray::decode<std::size("ICDMW"sv)>(r.npos, dict);
         std::cout << "\t(id=" << r.id << ", str=" << std::string(std::begin(dec), std::end(dec)) << ")," << std::endl;
     }
+```
+
+The output will be
+
+```
+common_prefix_search(ICDMW) =
+	(id=1, str=ICDM),
+	(id=2, str=ICDMW),
 ```
 
 ### Predictive search
@@ -131,4 +146,14 @@ int main() {
     }
 }
 ```
+
+The output will be
+
+```
+predictive_search(SIG) =
+	(id=4, str=SIGIR),
+	(id=5, str=SIGMOD),
+```
+
+## Demo
 
