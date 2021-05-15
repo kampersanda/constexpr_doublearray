@@ -19,12 +19,7 @@ else ()
     message(STATUS "Compiler is recent enough to support C++17.")
 endif ()
 
-find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-
-# -fvisibility=hidden is enabled to ignore "ld: warning: direct access in function for boost::filesystem."
-# https://stackoverflow.com/questions/36567072/why-do-i-get-ld-warning-direct-access-in-main-to-global-weak-symbol-in-this
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread -fvisibility=hidden -fconstexpr-depth=-1 -fconstexpr-steps=-1 -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread -fconstexpr-depth=-1 -fconstexpr-steps=-1 -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -march=native -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer -O0 -g -DDEBUG")
 
