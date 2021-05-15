@@ -1,10 +1,11 @@
 #include <iostream>
+#include <string>
 
 #include "constexpr_doublearray.hpp"
 
 using namespace std::string_view_literals;
 
-// Input words in text format (of string_view)
+// Input words concatenated by NULL character (in string_view)
 constexpr auto text = "ICDE\0"
                       "ICDM\0"
                       "ICDMW\0"
@@ -12,7 +13,7 @@ constexpr auto text = "ICDE\0"
                       "SIGIR\0"
                       "SIGMOD\0"sv;
 
-// Text -> Array<Word>
+// Convert the text to the array of words
 constexpr auto num_words = constexpr_doublearray::utils::get_num_words(text);
 constexpr auto words = constexpr_doublearray::utils::text_to_words<num_words>(text);
 
@@ -48,13 +49,8 @@ int main() {
     for (auto r : sig_ps) std::cout << r.id << ",";
     std::cout << ")" << std::endl;
 
-    std::cout << "decode(sig_ps[0]) = ";
-    for (auto c : sig0_dec) std::cout << c;
-    std::cout << std::endl;
-
-    std::cout << "decode(sig_ps[1]) = ";
-    for (auto c : sig1_dec) std::cout << c;
-    std::cout << std::endl;
+    std::cout << "decode(sig_ps[0]) = " << std::string(std::begin(sig0_dec), std::end(sig0_dec)) << std::endl;
+    std::cout << "decode(sig_ps[1]) = " << std::string(std::begin(sig1_dec), std::end(sig1_dec)) << std::endl;
 
     return 0;
 }
