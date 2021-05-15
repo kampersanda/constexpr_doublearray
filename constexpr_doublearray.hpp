@@ -351,7 +351,7 @@ constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units
 
     for (std::size_t c = 1; c < 256; c++) {
         const std::size_t cpos = units[npos].base ^ c;
-        if (units[cpos].check != npos) {
+        if (units[cpos].check == npos) {
             enumerate(cpos, depth + 1, units, results);
             if (results.size() == results.capacity()) {
                 return;

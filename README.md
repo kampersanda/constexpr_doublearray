@@ -1,6 +1,11 @@
 # constexpr_doublearray
-C++17 implementation of constexpr double-array trie
 
-## メモ
+This library provides a C++17 implementation of constexpr double-array trie.
 
-https://marycore.jp/prog/cpp/constexpr-variable-must-be-initialized-by-a-constant-expression/
+As you know, compile-time computation is awesome. Also, the double-array trie is awesome. Hence, the library is awesome (QED).
+
+## Sample usage
+
+```
+```
+
