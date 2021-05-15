@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(constexpr_double_array VERSION 1.0.0 LANGUAGES CXX)
+project(constexpr_doublearray VERSION 1.0.0 LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
@@ -19,6 +19,9 @@ else ()
     message(STATUS "Compiler is recent enough to support C++17.")
 endif ()
 
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
 # -fvisibility=hidden is enabled to ignore "ld: warning: direct access in function for boost::filesystem."
 # https://stackoverflow.com/questions/36567072/why-do-i-get-ld-warning-direct-access-in-main-to-global-weak-symbol-in-this
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -pthread -fvisibility=hidden -Wall")
@@ -30,5 +33,5 @@ message(STATUS "CXX_FLAGS are ${CMAKE_CXX_FLAGS}")
 message(STATUS "CXX_FLAGS_DEBUG are ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "CXX_FLAGS_RELEASE are ${CMAKE_CXX_FLAGS_RELEASE}")
 
-add_executable(main main.cpp)
+# add_executable(main main.cpp)
 add_executable(sample sample.cpp)

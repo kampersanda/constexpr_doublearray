@@ -4,26 +4,36 @@
 
 using namespace std::string_view_literals;
 
-static constexpr std::array<std::string_view, 5> words = {
-    "ICDE\0"sv, "ICDM\0"sv, "ICML\0"sv, "SIGIR\0"sv, "SIGMOD\0"sv,
-};
+constexpr auto text = "ICDE\0ICDM\0ICML\0SIGIR\0SIGMOD\0"sv;
+constexpr auto num_words = constexpr_doublearray::utils::get_num_words(text);
+constexpr auto words = constexpr_doublearray::utils::text_to_words<num_words>(text);
 
-std::ostream& operator<<(std::ostream& os, const std::tuple<std::size_t, std::size_t>& v) {
-    os << std::get<0>(v) << ',' << std::get<1>(v);
+// Routine for constructing the double array.
+constexpr auto make_doublearray() {
+    constexpr auto capacity = constexpr_doublearray::get_capacity(words);
+    constexpr auto units = constexpr_doublearray::make<capacity>(words);
+    return constexpr_doublearray::utils::shrink<std::size(units)>(units);
+}
+
+// Double-array dictionary
+constexpr auto dict = make_doublearray();
+
+//
+constexpr auto icde_sr = constexpr_doublearray::search("ICDE"sv, dict);
+constexpr auto sigmod_sr = constexpr_doublearray::search("SIGMOD"sv, dict);
+
+constexpr auto icde_cpsr = constexpr_doublearray::common_prefix_search<4>("ICDE"sv, dict);
+
+// // constexpr auto sigmod_ex = constexpr_doublearray::extract<sigmod_res.depth>(units);
+
+std::ostream& operator<<(std::ostream& os, const constexpr_doublearray::search_result& v) {
+    os << "id=" << v.id << ",npos=" << v.npos << ",depth=" << v.depth;
     return os;
 }
 
-constexpr auto make_units() {
-    constexpr auto capacity = constexpr_doublearray::get_capacity(words);
-    constexpr auto units = constexpr_doublearray::make<capacity>(words);
-    constexpr auto size = constexpr_doublearray::get_size(units);
-    return constexpr_doublearray::shrink_to_fit<size>(units);
-}
-
 int main() {
-    constexpr auto units = make_units();
-
-    std::cout << constexpr_doublearray::search(units, "ICDE"sv) << std::endl;
+    std::cout << icde_sr << std::endl;
+    std::cout << sigmod_sr << std::endl;
 
     return 0;
 }
