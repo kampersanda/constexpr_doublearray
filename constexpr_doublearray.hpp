@@ -16,6 +16,7 @@ template <class T, std::size_t Capacity>
 using static_vector = std::experimental::fixed_capacity_vector<T, Capacity>;
 
 static constexpr double RESERVE_FACTOR = 1.1;
+static constexpr char END_MARKER = '\000';
 
 struct unit_type {
     using int_type = int32_t;
@@ -52,39 +53,29 @@ constexpr void reverse(Iterator first, Iterator last) {
 }
 
 constexpr std::size_t get_num_words(const std::string_view& text) {
-    if (text.back() != '\0') {
+    if (text.back() != END_MARKER) {
         throw std::logic_error("The input text has to be terminated by NULL character.");
     }
     std::size_t n = 0;
     for (auto itr = std::begin(text); itr != std::end(text); ++itr) {
-        n += static_cast<std::size_t>(*itr == '\0');
+        n += static_cast<std::size_t>(*itr == END_MARKER);
     }
     return n;
 }
 
 template <std::size_t N>
 constexpr auto text_to_words(const std::string_view& text) {
-    if (text.back() != '\0') {
+    if (text.back() != END_MARKER) {
         throw std::logic_error("The input text has to be terminated by NULL character.");
     }
     std::array<std::string_view, N> words = {};
     auto b_itr = std::begin(text);
     for (std::size_t i = 0; i < N; i++) {
-        auto e_itr = find(b_itr, std::end(text), '\0') + 1;
+        auto e_itr = find(b_itr, std::end(text), END_MARKER) + 1;
         words[i] = text.substr(std::distance(std::begin(text), b_itr), std::distance(b_itr, e_itr));
         b_itr = e_itr;
     }
     return words;
-}
-
-template <std::size_t DstSize, std::size_t SrcSize, class T>
-constexpr static_vector<T, DstSize> shrink(const static_vector<T, SrcSize>& src_vec) {
-    static_assert(DstSize <= SrcSize);
-    static_vector<T, DstSize> dst_vec(DstSize);
-    for (std::size_t i = 0; i < DstSize; i++) {
-        dst_vec[i] = src_vec[i];
-    }
-    return dst_vec;
 }
 
 }  // namespace utils
@@ -97,6 +88,8 @@ class builder {
     using int_type = typename unit_type::int_type;
     using char_type = typename Words::value_type::value_type;
 
+    static_assert(sizeof(char_type) == 1);
+
   private:
     const Words& m_words;
     static_vector<unit_type, Capacity> m_units;
@@ -104,7 +97,7 @@ class builder {
     std::size_t m_id = 0;
     std::size_t m_size = 1;
 
-    std::array<char_type, 256> m_edges = {};
+    std::array<uint8_t, 256> m_edges = {};
     std::size_t m_num_edges = 0;
 
   public:
@@ -154,7 +147,7 @@ class builder {
 
     constexpr void arrange(std::size_t bpos, std::size_t epos, std::size_t depth, std::size_t npos) {
         if (std::size(m_words[bpos]) == depth) {
-            if (m_words[bpos].back() != '\0') {
+            if (m_words[bpos].back() != END_MARKER) {
                 throw std::logic_error("An input word has to be terminated by NULL character.");
             }
             assert(m_units[npos].base < 0);
@@ -164,9 +157,9 @@ class builder {
 
         m_num_edges = 0;
         {
-            auto c1 = m_words[bpos][depth];
+            auto c1 = static_cast<uint8_t>(m_words[bpos][depth]);
             for (auto i = bpos + 1; i < epos; i++) {
-                const auto c2 = m_words[i][depth];
+                const auto c2 = static_cast<uint8_t>(m_words[i][depth]);
                 if (c1 != c2) {
                     if (c1 > c2) {
                         throw std::logic_error("The input data is not in lexicographical order.");
@@ -191,10 +184,10 @@ class builder {
         }
 
         auto i = bpos;
-        auto c1 = m_words[bpos][depth];
+        auto c1 = static_cast<uint8_t>(m_words[bpos][depth]);
 
         for (auto j = bpos + 1; j < epos; j++) {
-            const auto c2 = m_words[j][depth];
+            const auto c2 = static_cast<uint8_t>(m_words[j][depth]);
             if (c1 != c2) {
                 arrange(i, j, depth + 1, base ^ static_cast<std::size_t>(c1));
                 i = j;
@@ -240,17 +233,17 @@ template <class Words>
 constexpr void get_num_nodes(const Words& words, std::size_t& num_nodes,  //
                              std::size_t bpos, std::size_t epos, std::size_t depth) {
     if (std::size(words[bpos]) == depth) {
-        if (words[bpos].back() != '\0') {
+        if (words[bpos].back() != END_MARKER) {
             throw std::logic_error("An input word has to be terminated by NULL character.");
         }
         return;
     }
 
     auto i = bpos;
-    auto c1 = words[bpos][depth];
+    auto c1 = static_cast<uint8_t>(words[bpos][depth]);
 
     for (auto j = bpos + 1; j < epos; j++) {
-        const auto c2 = words[j][depth];
+        const auto c2 = static_cast<uint8_t>(words[j][depth]);
         if (c1 != c2) {
             if (c1 > c2) {
                 throw std::logic_error("The input data is not in lexicographical order.");
@@ -286,7 +279,7 @@ struct search_result {
 
 template <class Word, class Units>
 constexpr search_result search(const Word& word, const Units& units) {
-    if (word.back() == '\0') {
+    if (word.back() == END_MARKER) {
         throw std::logic_error("The query word should not be terminated by NULL character.");
     }
 
@@ -298,7 +291,7 @@ constexpr search_result search(const Word& word, const Units& units) {
         }
         npos = cpos;
     }
-    const std::size_t cpos = units[npos].base;  // ^'\0'
+    const std::size_t cpos = units[npos].base;  // ^END_MARKER
     if (units[cpos].check != npos) {
         return {std::numeric_limits<std::size_t>::max(), npos, depth};
     }
@@ -309,7 +302,7 @@ template <std::size_t BufSize, class Word, class Units>
 constexpr auto common_prefix_search(const Word& word, const Units& units) {
     static_assert(BufSize != 0);
 
-    if (word.back() == '\0') {
+    if (word.back() == END_MARKER) {
         throw std::logic_error("The query word should not be terminated by NULL character.");
     }
 
@@ -317,7 +310,7 @@ constexpr auto common_prefix_search(const Word& word, const Units& units) {
     static_vector<search_result, BufSize> results;
 
     for (; depth < std::size(word); depth++) {
-        const std::size_t tpos = units[npos].base;  // ^'\0'
+        const std::size_t tpos = units[npos].base;  // ^END_MARKER
         if (units[tpos].check == npos) {
             results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
             if (results.size() == results.capacity()) {
@@ -331,7 +324,7 @@ constexpr auto common_prefix_search(const Word& word, const Units& units) {
         npos = cpos;
     }
 
-    const std::size_t tpos = units[npos].base;  // ^'\0'
+    const std::size_t tpos = units[npos].base;  // ^END_MARKER
     if (units[tpos].check == npos) {
         results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
     }
@@ -341,7 +334,7 @@ constexpr auto common_prefix_search(const Word& word, const Units& units) {
 template <std::size_t BufSize, class Units>
 constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units,
                          static_vector<search_result, BufSize>& results) {
-    const std::size_t tpos = units[npos].base;  // ^'\0'
+    const std::size_t tpos = units[npos].base;  // ^END_MARKER
     if (units[tpos].check == npos) {
         results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
         if (results.size() == results.capacity()) {
@@ -371,7 +364,7 @@ template <std::size_t BufSize, class Word, class Units>
 constexpr auto predictive_search(const Word& word, const Units& units) {
     static_assert(BufSize != 0);
 
-    if (word.back() == '\0') {
+    if (word.back() == END_MARKER) {
         throw std::logic_error("The query word should not be terminated by NULL character.");
     }
 

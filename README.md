@@ -1,8 +1,14 @@
 # constexpr_doublearray
 
-This library provides a C++17 implementation of constexpr double-array trie.
+## What is this?
 
-As you know, compile-time computation is awesome. Also, the double-array trie is awesome. Hence, the library is awesome (QED).
+This is a program that implements a double-array trie of **compile-time constants** in C++17.
+
+As you know, compile-time computation is awesome. Also, the double array is awesome. Hence, this program is awesome (QED).
+
+## Useful?
+
+I don't know.
 
 ## Sample usage
 
