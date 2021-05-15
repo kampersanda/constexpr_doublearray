@@ -21,7 +21,7 @@ fixed_capacity_vector
 ```
 
 - `constexpr_doublearray.hpp`: The `constexpr` double-array implementation (and some utils).
-- `fixed_capacity_vector`: [gnzlbg's static_vector](https://github.com/gnzlbg/static_vector) that is a `constexpr std::vector` implementation with fixed capacity..
+- `fixed_capacity_vector`: [gnzlbg's static_vector](https://github.com/gnzlbg/static_vector) that is a `constexpr std::vector` implementation with fixed capacity.
 
 ## Build instructions
 
