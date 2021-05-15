@@ -31,11 +31,11 @@ constexpr auto icde_dec = constexpr_doublearray::decode<icde_sr.depth>(icde_sr.n
 constexpr auto sigmod_dec = constexpr_doublearray::decode<sigmod_sr.depth>(sigmod_sr.npos, dict);
 
 // Common prefix search
-constexpr auto icdmw_cpsr = constexpr_doublearray::common_prefix_search<5>("ICDMW"sv, dict);
+constexpr auto icdmw_size = std::size("ICDMW"sv);
+constexpr auto icdmw_cpsr = constexpr_doublearray::common_prefix_search<icdmw_size>("ICDMW"sv, dict);
 
 // Predictive search
-constexpr auto sig_psr = constexpr_doublearray::predictive_search<2>("SIG"sv, dict);
-
+constexpr auto sig_psr = constexpr_doublearray::predictive_search<num_words>("SIG"sv, dict);
 // Buffer size for decoding
 constexpr auto decode_size = constexpr_doublearray::utils::get_max_length(words);
 
@@ -49,7 +49,7 @@ int main() {
 
     std::cout << "common_prefix_search(ICDMW) = ";
     for (auto r : icdmw_cpsr) {
-        const auto dec = constexpr_doublearray::decode<std::size("ICDMW"sv)>(r.npos, dict);
+        const auto dec = constexpr_doublearray::decode<icdmw_size>(r.npos, dict);
         std::cout << "(id=" << r.id << ",str=" << std::string(std::begin(dec), std::end(dec)) << "), ";
     }
     std::cout << std::endl;
