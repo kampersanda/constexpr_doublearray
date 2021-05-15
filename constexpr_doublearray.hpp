@@ -13,7 +13,7 @@
 namespace constexpr_doublearray {
 
 template <class T, std::size_t Capacity>
-using fc_vector = std::experimental::fixed_capacity_vector<T, Capacity>;
+using static_vector = std::experimental::fixed_capacity_vector<T, Capacity>;
 
 static constexpr double RESERVE_FACTOR = 1.1;
 
@@ -33,6 +33,22 @@ constexpr Iterator find(Iterator first, Iterator last, const Value& value) {
         if (*first == value) break;
     }
     return first;
+}
+
+// Constexpr version of algorithm::iter_swap
+template <class Iterator>
+constexpr void iter_swap(Iterator a, Iterator b) {
+    const auto t = *a;
+    *a = *b;
+    *b = t;
+}
+
+// Constexpr version of algorithm::reverse
+template <class Iterator>
+constexpr void reverse(Iterator first, Iterator last) {
+    for (; first != last and first != --last; ++first) {
+        iter_swap(first, last);
+    }
 }
 
 constexpr std::size_t get_num_words(const std::string_view& text) {
@@ -62,9 +78,9 @@ constexpr auto text_to_words(const std::string_view& text) {
 }
 
 template <std::size_t DstSize, std::size_t SrcSize, class T>
-constexpr fc_vector<T, DstSize> shrink(const fc_vector<T, SrcSize>& src_vec) {
+constexpr static_vector<T, DstSize> shrink(const static_vector<T, SrcSize>& src_vec) {
     static_assert(DstSize <= SrcSize);
-    fc_vector<T, DstSize> dst_vec(DstSize);
+    static_vector<T, DstSize> dst_vec(DstSize);
     for (std::size_t i = 0; i < DstSize; i++) {
         dst_vec[i] = src_vec[i];
     }
@@ -83,7 +99,7 @@ class builder {
 
   private:
     const Words& m_words;
-    fc_vector<unit_type, Capacity> m_units;
+    static_vector<unit_type, Capacity> m_units;
 
     std::size_t m_id = 0;
     std::size_t m_size = 1;
@@ -270,6 +286,10 @@ struct search_result {
 
 template <class Word, class Units>
 constexpr search_result search(const Word& word, const Units& units) {
+    if (word.back() == '\0') {
+        throw std::logic_error("The query word should not be terminated by NULL character.");
+    }
+
     std::size_t npos = 0, depth = 0;
     for (; depth < std::size(word); depth++) {
         const std::size_t cpos = units[npos].base ^ static_cast<std::size_t>(word[depth]);
@@ -289,8 +309,12 @@ template <std::size_t BufSize, class Word, class Units>
 constexpr auto common_prefix_search(const Word& word, const Units& units) {
     static_assert(BufSize != 0);
 
+    if (word.back() == '\0') {
+        throw std::logic_error("The query word should not be terminated by NULL character.");
+    }
+
     std::size_t npos = 0, depth = 0;
-    fc_vector<search_result, BufSize> results;
+    static_vector<search_result, BufSize> results;
 
     for (; depth < std::size(word); depth++) {
         const std::size_t tpos = units[npos].base;  // ^'\0'
@@ -316,7 +340,7 @@ constexpr auto common_prefix_search(const Word& word, const Units& units) {
 
 template <std::size_t BufSize, class Units>
 constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units,
-                         fc_vector<search_result, BufSize>& results) {
+                         static_vector<search_result, BufSize>& results) {
     const std::size_t tpos = units[npos].base;  // ^'\0'
     if (units[tpos].check == npos) {
         results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
@@ -338,7 +362,7 @@ constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units
 
 template <std::size_t BufSize, class Units>
 constexpr auto enumerate(const Units& units) {
-    fc_vector<search_result, BufSize> results;
+    static_vector<search_result, BufSize> results;
     enumerate(0, 0, units, results);
     return results;
 }
@@ -347,8 +371,12 @@ template <std::size_t BufSize, class Word, class Units>
 constexpr auto predictive_search(const Word& word, const Units& units) {
     static_assert(BufSize != 0);
 
+    if (word.back() == '\0') {
+        throw std::logic_error("The query word should not be terminated by NULL character.");
+    }
+
     std::size_t npos = 0, depth = 0;
-    fc_vector<search_result, BufSize> results;
+    static_vector<search_result, BufSize> results;
 
     for (; depth < std::size(word); depth++) {
         const std::size_t cpos = units[npos].base ^ static_cast<std::size_t>(word[depth]);
@@ -360,6 +388,23 @@ constexpr auto predictive_search(const Word& word, const Units& units) {
 
     enumerate(npos, depth, units, results);
     return results;
+}
+
+template <std::size_t BufSize, class Units>
+constexpr auto decode(std::size_t npos, const Units& units) {
+    static_assert(BufSize != 0);
+
+    static_vector<char, BufSize> word;
+    if (units[npos].check < 0) {
+        return word;
+    }
+    while (npos != 0) {
+        const std::size_t ppos = units[npos].check;
+        word.push_back(static_cast<char>(units[ppos].base ^ npos));
+        npos = ppos;
+    }
+    utils::reverse(word.begin(), word.end());
+    return word;
 }
 
 }  // namespace constexpr_doublearray

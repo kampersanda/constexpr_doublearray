@@ -26,14 +26,26 @@ constexpr auto icde_cpsr = constexpr_doublearray::common_prefix_search<4>("ICDE"
 
 // // constexpr auto sigmod_ex = constexpr_doublearray::extract<sigmod_res.depth>(units);
 
+constexpr auto icde_dec = constexpr_doublearray::decode<icde_sr.depth>(icde_sr.npos, dict);
+
 std::ostream& operator<<(std::ostream& os, const constexpr_doublearray::search_result& v) {
     os << "id=" << v.id << ",npos=" << v.npos << ",depth=" << v.depth;
     return os;
 }
 
+template <class Vec>
+void print_vec(const Vec& vec) {
+    for (auto v : vec) {
+        std::cout << v;
+    }
+    std::cout << std::endl;
+}
+
 int main() {
     std::cout << icde_sr << std::endl;
     std::cout << sigmod_sr << std::endl;
+
+    print_vec(icde_dec);
 
     return 0;
 }
