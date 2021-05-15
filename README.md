@@ -107,10 +107,8 @@ constexpr auto icde_dec = constexpr_doublearray::decode<icde_sr.depth>(icde_sr.n
 constexpr auto sigmod_dec = constexpr_doublearray::decode<sigmod_sr.depth>(sigmod_sr.npos, dict);
 
 int main() {
-    std::cout << "decode(icde_sr) = ";
-    std::cout << std::string(std::begin(icde_dec), std::end(icde_dec)) << std::endl;
-    std::cout << "decode(sigmod_sr) = ";
-    std::cout << std::string(std::begin(sigmod_dec), std::end(sigmod_dec)) << std::endl;
+    std::cout << "decode(icde_sr) = " << std::string(std::begin(icde_dec), std::end(icde_dec)) << std::endl;
+    std::cout << "decode(sigmod_sr) = " << std::string(std::begin(sigmod_dec), std::end(sigmod_dec)) << std::endl;
 }
 ```
 
