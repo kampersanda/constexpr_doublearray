@@ -306,18 +306,19 @@ CXPRDA_CONSTEXPR std::size_t get_capacity(const Words& words) {
 
 #ifndef CXPRDA_DISABLE_CONSTEXPR
 template <std::size_t Capacity, class Words>
-#else
-template <class Words>
-#endif
 constexpr auto make(const Words& words) {
-#ifndef CXPRDA_DISABLE_CONSTEXPR
     using units_type = static_vector<details::unit<>, Capacity>;
-#else
-    using units_type = std::vector<details::unit<>>;
-#endif
     details::builder<Words, units_type> b(words);
     return b.steal_units();  // the move may not make sense
 }
+#else
+template <class Words>
+constexpr auto make(const Words& words) {
+    using units_type = std::vector<details::unit<>>;
+    details::builder<Words, units_type> b(words);
+    return b.steal_units();  // the move may not make sense
+}
+#endif
 
 struct search_result {
     std::size_t id;
@@ -347,31 +348,25 @@ CXPRDA_CONSTEXPR search_result search(const Word& word, const Units& units) {
 }
 
 #ifndef CXPRDA_DISABLE_CONSTEXPR
+
 template <std::size_t BufSize, class Word, class Units>
-#else
-template <class Word, class Units>
-#endif
 constexpr auto common_prefix_search(const Word& word, const Units& units) {
+    static_assert(BufSize != 0);
+
     if (word.back() == END_MARKER) {
         throw std::logic_error("The query word should not be terminated by NULL character.");
     }
 
-#ifndef CXPRDA_DISABLE_CONSTEXPR
-    static_vector<search_result, BufSize> results;
-#else
-    std::vector<search_result> results;
-#endif
-
     std::size_t npos = 0, depth = 0;
+    static_vector<search_result, BufSize> results;
+
     for (; depth < std::size(word); depth++) {
         const std::size_t tpos = units[npos].base;  // ^END_MARKER
         if (units[tpos].check == npos) {
             results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
-#ifndef CXPRDA_DISABLE_CONSTEXPR
             if (results.size() == results.capacity()) {
                 return results;
             }
-#endif
         }
         const std::size_t cpos = units[npos].base ^ static_cast<std::size_t>(word[depth]);
         if (units[cpos].check != npos) {
@@ -387,69 +382,48 @@ constexpr auto common_prefix_search(const Word& word, const Units& units) {
     return results;
 }
 
-#ifndef CXPRDA_DISABLE_CONSTEXPR
 template <std::size_t BufSize, class Units>
 constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units,
                          static_vector<search_result, BufSize>& results) {
-#else
-template <class Units>
-constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units, std::vector<search_result>& results) {
-#endif
+    static_assert(BufSize != 0);
+
     const std::size_t tpos = units[npos].base;  // ^END_MARKER
     if (units[tpos].check == npos) {
         results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
-#ifndef CXPRDA_DISABLE_CONSTEXPR
         if (results.size() == results.capacity()) {
             return;
         }
-#endif
     }
 
     for (std::size_t c = 1; c < 256; c++) {
         const std::size_t cpos = units[npos].base ^ c;
         if (units[cpos].check == npos) {
             enumerate(cpos, depth + 1, units, results);
-#ifndef CXPRDA_DISABLE_CONSTEXPR
             if (results.size() == results.capacity()) {
                 return;
             }
-#endif
         }
     }
 }
 
-#ifndef CXPRDA_DISABLE_CONSTEXPR
 template <std::size_t BufSize, class Units>
-#else
-template <class Units>
-#endif
 constexpr auto enumerate(const Units& units) {
-#ifndef CXPRDA_DISABLE_CONSTEXPR
     static_vector<search_result, BufSize> results;
-#else
-    std::vector<search_result> results;
-#endif
     enumerate(0, 0, units, results);
     return results;
 }
 
-#ifndef CXPRDA_DISABLE_CONSTEXPR
 template <std::size_t BufSize, class Word, class Units>
-#else
-template <class Word, class Units>
-#endif
 constexpr auto predictive_search(const Word& word, const Units& units) {
+    static_assert(BufSize != 0);
+
     if (word.back() == END_MARKER) {
         throw std::logic_error("The query word should not be terminated by NULL character.");
     }
 
-#ifndef CXPRDA_DISABLE_CONSTEXPR
-    static_vector<search_result, BufSize> results;
-#else
-    std::vector<search_result> results;
-#endif
-
     std::size_t npos = 0, depth = 0;
+    static_vector<search_result, BufSize> results;
+
     for (; depth < std::size(word); depth++) {
         const std::size_t cpos = units[npos].base ^ static_cast<std::size_t>(word[depth]);
         if (units[cpos].check != npos) {
@@ -462,18 +436,104 @@ constexpr auto predictive_search(const Word& word, const Units& units) {
     return results;
 }
 
-#ifndef CXPRDA_DISABLE_CONSTEXPR
 template <std::size_t BufSize, class Units>
-#else
-template <class Units>
-#endif
 constexpr auto decode(std::size_t npos, const Units& units) {
-#ifndef CXPRDA_DISABLE_CONSTEXPR
-    static_vector<char, BufSize> word;
-#else
-    std::vector<char> word;
-#endif
+    static_assert(BufSize != 0);
 
+    static_vector<char, BufSize> word;
+    if (units[npos].check < 0) {
+        return word;
+    }
+
+    while (npos != 0) {
+        const std::size_t ppos = units[npos].check;
+        const char c = static_cast<char>(units[ppos].base ^ npos);
+        if (c != END_MARKER) {
+            word.push_back(c);
+        }
+        npos = ppos;
+    }
+
+    utils::reverse(word.begin(), word.end());
+    return word;
+}
+
+#else
+
+template <class Word, class Units>
+constexpr auto common_prefix_search(const Word& word, const Units& units) {
+    if (word.back() == END_MARKER) {
+        throw std::logic_error("The query word should not be terminated by NULL character.");
+    }
+
+    std::size_t npos = 0, depth = 0;
+    std::vector<search_result> results;
+
+    for (; depth < std::size(word); depth++) {
+        const std::size_t tpos = units[npos].base;  // ^END_MARKER
+        if (units[tpos].check == npos) {
+            results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
+        }
+        const std::size_t cpos = units[npos].base ^ static_cast<std::size_t>(word[depth]);
+        if (units[cpos].check != npos) {
+            return results;
+        }
+        npos = cpos;
+    }
+
+    const std::size_t tpos = units[npos].base;  // ^END_MARKER
+    if (units[tpos].check == npos) {
+        results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
+    }
+    return results;
+}
+
+template <class Units>
+constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units, std::vector<search_result>& results) {
+    const std::size_t tpos = units[npos].base;  // ^END_MARKER
+    if (units[tpos].check == npos) {
+        results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
+    }
+
+    for (std::size_t c = 1; c < 256; c++) {
+        const std::size_t cpos = units[npos].base ^ c;
+        if (units[cpos].check == npos) {
+            enumerate(cpos, depth + 1, units, results);
+        }
+    }
+}
+
+template <class Units>
+constexpr auto enumerate(const Units& units) {
+    std::vector<search_result> results;
+    enumerate(0, 0, units, results);
+    return results;
+}
+
+template <class Word, class Units>
+constexpr auto predictive_search(const Word& word, const Units& units) {
+    if (word.back() == END_MARKER) {
+        throw std::logic_error("The query word should not be terminated by NULL character.");
+    }
+
+    std::size_t npos = 0, depth = 0;
+    std::vector<search_result> results;
+
+    for (; depth < std::size(word); depth++) {
+        const std::size_t cpos = units[npos].base ^ static_cast<std::size_t>(word[depth]);
+        if (units[cpos].check != npos) {
+            return results;
+        }
+        npos = cpos;
+    }
+
+    enumerate(npos, depth, units, results);
+    return results;
+}
+
+template <class Units>
+constexpr auto decode(std::size_t npos, const Units& units) {
+    std::vector<char> word;
     if (units[npos].check < 0) {
         return word;
     }
@@ -489,5 +549,7 @@ constexpr auto decode(std::size_t npos, const Units& units) {
     utils::reverse(word.begin(), word.end());
     return word;
 }
+
+#endif
 
 }  // namespace constexpr_doublearray
