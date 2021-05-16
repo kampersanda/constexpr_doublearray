@@ -223,6 +223,6 @@ Most compilers restrict the number of evaluated expressions at compile time. For
 
 When constructing the double array from a large dataset, the construction may fail with the default values. In `make` and `predictive_search`, the trie is traversed recursively, and the maximum depth is the maximum length of the stored words. That is, you need to set `-fconstexpr-depth` to the maximum length at least. Also, in `make`, there are some parts that loop through the array, `-fconstexpr-steps` should be set to a sufficiently large value.
 
-In Clang, setting `-fconstexpr-depth=-1 -fconstexpr-steps=-1` provides the largest values. This is a hack-like approach and may fail depending on Clang updates. At least, it works with AppleClang 12.0.0.
+In Clang, setting `-fconstexpr-depth=-1 -fconstexpr-steps=-1` provides the largest values ([Ref](https://qiita.com/ushitora_anqou/items/6322c6839f39f6b03a4e)). This is a hack-like approach and may fail depending on Clang updates. At least, it works with AppleClang 12.0.0.
 
-In [GNU](https://gcc.gnu.org/onlinedocs/gcc/C_002b_002b-Dialect-Options.html), `-fconstexpr-loop-limit` is used instead of `-fconstexpr-steps`. Note that such a negative parameter will be invalid.
+In [GNU](https://gcc.gnu.org/onlinedocs/gcc/C_002b_002b-Dialect-Options.html) compilers, `-fconstexpr-loop-limit` is used instead of `-fconstexpr-steps`. Note that such a negative parameter will be invalid.
