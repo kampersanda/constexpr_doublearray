@@ -214,3 +214,15 @@ aichi_konan_college
 $ python txt2hpp.py univs.txt
 ```
 
+## Relaxation of `constexpr` restrictions 
+
+Most compilers limit the number of evaluated expressions at compile time. For example, in [Clang](https://clang.llvm.org/docs/UsersManual.html), the limits are indicated by the following options:
+
+- `-fconstexpr-depth`: The limit for recursive `constexpr` function calls. The default value is 512.
+- `-fconstexpr-steps`: The limit for the number of full-expressions evaluated in a single constant expression evaluation. The default value is 1048576.
+
+When constructing the double array from a large dataset, the construction may fail with the default values. For example, in `make` and `predictive_search`, the trie is traversed recursively, and the maximum depth is the maximum length of the stored words. That is, you need to set `-fconstexpr-depth` to the maximum length at least. Also, in `make`, there are some parts that loop through the array, `-fconstexpr-steps` should be set to a sufficiently large value.
+
+In Clang, setting `-fconstexpr-depth=-1 -fconstexpr-steps=-1` provides the largest values. This is a hack-like approach and may fail depending on Clang updates. At least, in AppleClang 12.0.0, it works.
+
+In [GNU](https://gcc.gnu.org/onlinedocs/gcc/C_002b_002b-Dialect-Options.html), `-fconstexpr-loop-limit` is used instead of `-fconstexpr-steps`. Note that such a negative parameter will be invalid.
