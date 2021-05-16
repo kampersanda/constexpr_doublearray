@@ -10,6 +10,14 @@
 
 #include "fixed_capacity_vector"
 
+#define CXPRDA_ENABLE_CONSTEXPR
+
+#ifdef CXPRDA_ENABLE_CONSTEXPR
+#define CXPRDA_CONSTEXPR constexpr
+#else
+#define CXPRDA_CONSTEXPR
+#endif
+
 namespace constexpr_doublearray {
 
 template <class T, std::size_t Capacity>
@@ -115,16 +123,16 @@ class builder {
     static_vector<uint8_t, 256> m_edges;
 
   public:
-    constexpr builder(const Words& words) : m_words(words), m_units(256) {
+    CXPRDA_CONSTEXPR builder(const Words& words) : m_words(words), m_units(256) {
         init();
         arrange(0, std::size(words), 0, 0);
     }
-    constexpr units_type steal_units() {
+    CXPRDA_CONSTEXPR units_type steal_units() {
         return std::move(m_units);
     }
 
   private:
-    constexpr void init() {
+    CXPRDA_CONSTEXPR void init() {
         for (int_type i = 1; i < 256; i++) {
             m_units[i].base = -(i + 1);
             m_units[i].check = -(i - 1);
@@ -135,7 +143,7 @@ class builder {
         m_units[0].check = 1;  // Empty head
     }
 
-    constexpr void enlarge() {
+    CXPRDA_CONSTEXPR void enlarge() {
         const auto old_size = static_cast<int_type>(std::size(m_units));
         const auto new_size = old_size + 256;
 
@@ -157,7 +165,7 @@ class builder {
         }
     }
 
-    constexpr void fix_child(std::size_t npos, std::size_t cpos) {
+    CXPRDA_CONSTEXPR void fix_child(std::size_t npos, std::size_t cpos) {
         assert(m_units[npos].check >= 0);
         assert(m_units[cpos].check < 0);
 
@@ -178,7 +186,7 @@ class builder {
         m_units[cpos].check = static_cast<int_type>(npos);
     }
 
-    constexpr void arrange(std::size_t bpos, std::size_t epos, std::size_t depth, std::size_t npos) {
+    CXPRDA_CONSTEXPR void arrange(std::size_t bpos, std::size_t epos, std::size_t depth, std::size_t npos) {
         if (std::size(m_words[bpos]) == depth) {
             if (m_words[bpos].back() != END_MARKER) {
                 throw std::logic_error("An input word has to be terminated by NULL character.");
@@ -230,7 +238,7 @@ class builder {
         arrange(i, epos, depth + 1, base ^ static_cast<std::size_t>(c1));
     }
 
-    constexpr std::size_t xcheck() const {
+    CXPRDA_CONSTEXPR std::size_t xcheck() const {
         assert(!std::empty(m_edges));
 
         const std::size_t emp_head = m_units[0].check;
@@ -251,7 +259,7 @@ class builder {
         return std::size(m_units) ^ static_cast<std::size_t>(m_edges[0]);
     }
 
-    constexpr bool is_target(const std::size_t base) const {
+    CXPRDA_CONSTEXPR bool is_target(const std::size_t base) const {
         for (const auto c : m_edges) {
             const auto npos = base ^ static_cast<std::size_t>(c);
             if (m_units[npos].check >= 0) {
@@ -263,8 +271,8 @@ class builder {
 };
 
 template <class Words>
-constexpr void get_num_nodes(const Words& words, std::size_t& num_nodes,  //
-                             std::size_t bpos, std::size_t epos, std::size_t depth) {
+CXPRDA_CONSTEXPR void get_num_nodes(const Words& words, std::size_t& num_nodes,  //
+                                    std::size_t bpos, std::size_t epos, std::size_t depth) {
     if (std::size(words[bpos]) == depth) {
         if (words[bpos].back() != END_MARKER) {
             throw std::logic_error("An input word has to be terminated by NULL character.");
