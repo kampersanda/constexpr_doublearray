@@ -79,7 +79,7 @@ constexpr auto text_to_words(const std::string_view& text) {
     return words;
 }
 #else
-constexpr auto text_to_words(const std::string_view& text) {
+auto text_to_words(const std::string_view& text) {
     if (text.back() != END_MARKER) {
         throw std::logic_error("The input text has to be terminated by NULL character.");
     }
@@ -329,7 +329,7 @@ constexpr auto make(const Words& words) {
 }
 #else
 template <class Words>
-constexpr auto make(const Words& words) {
+auto make(const Words& words) {
     using units_type = std::vector<details::unit<>>;
     details::builder<Words, units_type> b(words);
     auto units = b.steal_units();
