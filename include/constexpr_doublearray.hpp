@@ -309,14 +309,16 @@ template <std::size_t Capacity, class Words>
 constexpr auto make(const Words& words) {
     using units_type = static_vector<details::unit<>, Capacity>;
     details::builder<Words, units_type> b(words);
-    return b.steal_units();  // the move may not make sense
+    return b.steal_units();
 }
 #else
 template <class Words>
 constexpr auto make(const Words& words) {
     using units_type = std::vector<details::unit<>>;
     details::builder<Words, units_type> b(words);
-    return b.steal_units();  // the move may not make sense
+    auto units = b.steal_units();
+    units.shrink_to_fit();
+    return units;
 }
 #endif
 
