@@ -63,6 +63,7 @@ constexpr std::size_t get_num_words(const std::string_view& text) {
     return n;
 }
 
+#ifndef CXPRDA_DISABLE_CONSTEXPR
 template <std::size_t N>
 constexpr auto text_to_words(const std::string_view& text) {
     if (text.back() != END_MARKER) {
@@ -77,6 +78,21 @@ constexpr auto text_to_words(const std::string_view& text) {
     }
     return words;
 }
+#else
+constexpr auto text_to_words(const std::string_view& text) {
+    if (text.back() != END_MARKER) {
+        throw std::logic_error("The input text has to be terminated by NULL character.");
+    }
+    std::vector<std::string_view> words(get_num_words(text));
+    auto b_itr = std::begin(text);
+    for (std::size_t i = 0; i < N; i++) {
+        auto e_itr = find(b_itr, std::end(text), END_MARKER) + 1;
+        words[i] = text.substr(std::distance(std::begin(text), b_itr), std::distance(b_itr, e_itr));
+        b_itr = e_itr;
+    }
+    return words;
+}
+#endif
 
 template <class Words>
 constexpr std::size_t get_max_length(const Words& words) {
@@ -463,7 +479,7 @@ constexpr auto decode(std::size_t npos, const Units& units) {
 #else
 
 template <class Word, class Units>
-constexpr auto common_prefix_search(const Word& word, const Units& units) {
+auto common_prefix_search(const Word& word, const Units& units) {
     if (word.back() == END_MARKER) {
         throw std::logic_error("The query word should not be terminated by NULL character.");
     }
@@ -491,7 +507,7 @@ constexpr auto common_prefix_search(const Word& word, const Units& units) {
 }
 
 template <class Units>
-constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units, std::vector<search_result>& results) {
+void enumerate(std::size_t npos, std::size_t depth, const Units& units, std::vector<search_result>& results) {
     const std::size_t tpos = units[npos].base;  // ^END_MARKER
     if (units[tpos].check == npos) {
         results.push_back(search_result{static_cast<std::size_t>(units[tpos].base), tpos, depth + 1});
@@ -506,14 +522,14 @@ constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units
 }
 
 template <class Units>
-constexpr auto enumerate(const Units& units) {
+auto enumerate(const Units& units) {
     std::vector<search_result> results;
     enumerate(0, 0, units, results);
     return results;
 }
 
 template <class Word, class Units>
-constexpr auto predictive_search(const Word& word, const Units& units) {
+auto predictive_search(const Word& word, const Units& units) {
     if (word.back() == END_MARKER) {
         throw std::logic_error("The query word should not be terminated by NULL character.");
     }
@@ -534,7 +550,7 @@ constexpr auto predictive_search(const Word& word, const Units& units) {
 }
 
 template <class Units>
-constexpr auto decode(std::size_t npos, const Units& units) {
+auto decode(std::size_t npos, const Units& units) {
     std::vector<char> word;
     if (units[npos].check < 0) {
         return word;
