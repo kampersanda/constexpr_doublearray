@@ -205,6 +205,12 @@ Good bye!!
 Through Python script `txt2hpp.py`, you can produce `dataset.hpp` from a text file with line-separated words.
 
 ```shell
+$ head -5 univs.txt
+aichi_bunkyo_university
+aichi_gakuin_university
+aichi_institute_of_technology
+aichi_kiwami_college_of_nursing
+aichi_konan_college
 $ python txt2hpp.py univs.txt
 ```
 
