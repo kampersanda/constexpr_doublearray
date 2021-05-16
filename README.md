@@ -216,7 +216,7 @@ $ python txt2hpp.py univs.txt
 
 ## Relaxation of `constexpr` restrictions 
 
-Most compilers limit the number of evaluated expressions at compile time. For example, in [Clang](https://clang.llvm.org/docs/UsersManual.html), the limits are indicated by the following options:
+Most compilers restrict the number of evaluated expressions at compile time. For example, in [Clang](https://clang.llvm.org/docs/UsersManual.html), the limits are indicated by the following options:
 
 - `-fconstexpr-depth`: The limit for recursive `constexpr` function calls. The default value is 512.
 - `-fconstexpr-steps`: The limit for the number of full-expressions evaluated in a single constant expression evaluation. The default value is 1048576.
