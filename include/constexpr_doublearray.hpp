@@ -19,13 +19,6 @@ static constexpr double RESERVE_FACTOR = 1.1;
 static constexpr char END_MARKER = '\000';
 static constexpr auto NOT_FOUND = std::numeric_limits<std::size_t>::max();
 
-struct unit_type {
-    using int_type = int32_t;
-
-    int_type base;
-    int_type check;
-};
-
 namespace utils {
 
 // Constexpr version of algorithm::find
@@ -92,45 +85,76 @@ constexpr std::size_t get_max_length(const Words& words) {
 
 namespace details {
 
-template <std::size_t Capacity, class Words>
+template <class Int = int32_t>
+struct unit {
+    static_assert(std::is_signed_v<Int>, "The integer type has to be signed.");
+
+    using int_type = Int;
+
+    int_type base;
+    int_type check;
+};
+
+template <class Words, class Units>
 class builder {
   public:
+    using words_type = Words;
+    using units_type = Units;
+
+    using unit_type = typename Units::value_type;
     using int_type = typename unit_type::int_type;
-    using char_type = typename Words::value_type::value_type;
+    using char_type = typename words_type::value_type::value_type;
 
     static_assert(sizeof(char_type) == 1);
 
   private:
-    const Words& m_words;
-    static_vector<unit_type, Capacity> m_units;
+    const words_type& m_words;
+    units_type m_units;
 
     std::size_t m_id = 0;
-    std::size_t m_size = 1;
-
-    std::array<uint8_t, 256> m_edges = {};
-    std::size_t m_num_edges = 0;
+    static_vector<uint8_t, 256> m_edges;
 
   public:
-    constexpr builder(const Words& words) : m_words(words), m_units(Capacity) {
+    constexpr builder(const Words& words) : m_words(words), m_units(256) {
         init();
         arrange(0, std::size(words), 0, 0);
-        m_units.resize((m_size + 255) / 256 * 256);
     }
-    constexpr auto steal_units() {
+    constexpr units_type steal_units() {
         return std::move(m_units);
     }
 
   private:
     constexpr void init() {
-        const auto size = static_cast<int_type>(std::size(m_units));
-        for (int_type i = 1; i < size; i++) {
-            m_units[i].base = -1 * (i + 1);
-            m_units[i].check = -1 * (i - 1);
+        for (int_type i = 1; i < 256; i++) {
+            m_units[i].base = -(i + 1);
+            m_units[i].check = -(i - 1);
         }
-        m_units[size - 1].base = -1;
-        m_units[1].check = -1 * (size - 1);
-        m_units[0].base = -1;  // unused flag
+        m_units[255].base = -1;
+        m_units[1].check = -255;
+        m_units[0].base = -1;  // As unused flag
         m_units[0].check = 1;  // Empty head
+    }
+
+    constexpr void enlarge() {
+        const auto old_size = static_cast<int_type>(std::size(m_units));
+        const auto new_size = old_size + 256;
+
+        for (auto i = old_size; i < new_size; i++) {
+            m_units.push_back(unit_type{-(i + 1), -(i - 1)});
+        }
+
+        if (m_units[0].check == 0) {  // is full?
+            m_units[new_size - 1].base = -old_size;
+            m_units[old_size].check = -(new_size - 1);
+            m_units[0].check = old_size;
+        } else {
+            const auto emp_head = m_units[0].check;
+            const auto emp_tail = -m_units[emp_head].check;
+            m_units[emp_tail].base = -old_size;
+            m_units[old_size].check = -emp_tail;
+            m_units[new_size - 1].base = -emp_head;
+            m_units[emp_head].check = -(new_size - 1);
+        }
     }
 
     constexpr void fix_child(std::size_t npos, std::size_t cpos) {
@@ -152,7 +176,6 @@ class builder {
         }
 
         m_units[cpos].check = static_cast<int_type>(npos);
-        m_size = std::max(m_size, cpos + 1);
     }
 
     constexpr void arrange(std::size_t bpos, std::size_t epos, std::size_t depth, std::size_t npos) {
@@ -165,7 +188,7 @@ class builder {
             return;
         }
 
-        m_num_edges = 0;
+        m_edges.clear();
         {
             auto c1 = static_cast<uint8_t>(m_words[bpos][depth]);
             for (auto i = bpos + 1; i < epos; i++) {
@@ -174,23 +197,23 @@ class builder {
                     if (c1 > c2) {
                         throw std::logic_error("The input data is not in lexicographical order.");
                     }
-                    m_edges[m_num_edges++] = c1;
+                    m_edges.push_back(c1);
                     c1 = c2;
                 }
             }
-            m_edges[m_num_edges++] = c1;
+            m_edges.push_back(c1);
         }
 
         const auto base = xcheck();
-        if (base == NOT_FOUND) {
-            throw std::logic_error("The capacity is not enough. Increase RESERVE_FACTOR.");
+        if (std::size(m_units) <= base) {
+            enlarge();
         }
 
         assert(m_units[npos].base < 0);
         m_units[npos].base = static_cast<int_type>(base);
 
-        for (std::size_t i = 0; i < m_num_edges; i++) {
-            fix_child(npos, base ^ static_cast<std::size_t>(m_edges[i]));
+        for (const auto c : m_edges) {
+            fix_child(npos, base ^ static_cast<std::size_t>(c));
         }
 
         auto i = bpos;
@@ -207,30 +230,30 @@ class builder {
         arrange(i, epos, depth + 1, base ^ static_cast<std::size_t>(c1));
     }
 
-    constexpr std::size_t xcheck() {
-        assert(m_num_edges != 0);
+    constexpr std::size_t xcheck() const {
+        assert(!std::empty(m_edges));
 
-        const std::size_t epos = m_units[0].check;
-        if (epos == 0) {
-            return NOT_FOUND;
+        const std::size_t emp_head = m_units[0].check;
+        if (emp_head == 0) {
+            return std::size(m_units) ^ static_cast<std::size_t>(m_edges[0]);
         }
 
-        std::size_t npos = epos;
+        std::size_t npos = emp_head;
         do {
-            const std::size_t base = npos ^ std::size_t(m_edges[0]);
+            const std::size_t base = npos ^ static_cast<std::size_t>(m_edges[0]);
             if (is_target(base)) {
                 return base;
             }
             assert(m_units[npos].base < 0);
             npos = -1 * m_units[npos].base;
-        } while (npos != epos);
+        } while (npos != emp_head);
 
-        return NOT_FOUND;
+        return std::size(m_units) ^ static_cast<std::size_t>(m_edges[0]);
     }
 
-    constexpr bool is_target(const std::size_t base) {
-        for (std::size_t i = 0; i < m_num_edges; i++) {
-            const auto npos = base ^ std::size_t(m_edges[i]);
+    constexpr bool is_target(const std::size_t base) const {
+        for (const auto c : m_edges) {
+            const auto npos = base ^ static_cast<std::size_t>(c);
             if (m_units[npos].check >= 0) {
                 return false;
             }
@@ -277,7 +300,8 @@ constexpr std::size_t get_capacity(const Words& words) {
 
 template <std::size_t Capacity, class Words>
 constexpr auto make(const Words& words) {
-    details::builder<Capacity, Words> b(words);
+    using units_type = static_vector<details::unit<>, Capacity>;
+    details::builder<Words, units_type> b(words);
     return b.steal_units();  // the move may not make sense
 }
 
