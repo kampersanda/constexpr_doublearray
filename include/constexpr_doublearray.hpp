@@ -324,7 +324,7 @@ CXPRDA_CONSTEXPR std::size_t get_capacity(const Words& words) {
 }
 
 template <std::size_t Capacity, class Words>
-constexpr auto make(const Words& words) {
+CXPRDA_CONSTEXPR auto make(const Words& words) {
     using units_type = static_vector<details::unit<>, Capacity>;
     details::builder<Words, units_type> b(words);
     return b.steal_units();
@@ -358,7 +358,7 @@ CXPRDA_CONSTEXPR search_result search(const Word& word, const Units& units) {
 }
 
 template <std::size_t BufSize, class Word, class Units>
-constexpr auto common_prefix_search(const Word& word, const Units& units) {
+CXPRDA_CONSTEXPR auto common_prefix_search(const Word& word, const Units& units) {
     static_assert(BufSize != 0);
 
     if (word.back() == END_MARKER) {
@@ -391,8 +391,8 @@ constexpr auto common_prefix_search(const Word& word, const Units& units) {
 }
 
 template <std::size_t BufSize, class Units>
-constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units,
-                         static_vector<search_result, BufSize>& results) {
+CXPRDA_CONSTEXPR void enumerate(std::size_t npos, std::size_t depth, const Units& units,
+                                static_vector<search_result, BufSize>& results) {
     static_assert(BufSize != 0);
 
     const std::size_t tpos = units[npos].base;  // ^END_MARKER
@@ -415,14 +415,14 @@ constexpr void enumerate(std::size_t npos, std::size_t depth, const Units& units
 }
 
 template <std::size_t BufSize, class Units>
-constexpr auto enumerate(const Units& units) {
+CXPRDA_CONSTEXPR auto enumerate(const Units& units) {
     static_vector<search_result, BufSize> results;
     enumerate(0, 0, units, results);
     return results;
 }
 
 template <std::size_t BufSize, class Word, class Units>
-constexpr auto predictive_search(const Word& word, const Units& units) {
+CXPRDA_CONSTEXPR auto predictive_search(const Word& word, const Units& units) {
     static_assert(BufSize != 0);
 
     if (word.back() == END_MARKER) {
@@ -445,7 +445,7 @@ constexpr auto predictive_search(const Word& word, const Units& units) {
 }
 
 template <std::size_t BufSize, class Units>
-constexpr auto decode(std::size_t npos, const Units& units) {
+CXPRDA_CONSTEXPR auto decode(std::size_t npos, const Units& units) {
     static_assert(BufSize != 0);
 
     static_vector<char, BufSize> word;
