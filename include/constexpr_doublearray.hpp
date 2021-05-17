@@ -12,6 +12,7 @@
 
 #ifdef CXPRDA_DISABLE_CONSTEXPR
 #define CXPRDA_CONSTEXPR
+#include <vector>
 #else
 #define CXPRDA_CONSTEXPR constexpr
 #endif
@@ -85,7 +86,7 @@ auto text_to_words(const std::string_view& text) {
     }
     std::vector<std::string_view> words(get_num_words(text));
     auto b_itr = std::begin(text);
-    for (std::size_t i = 0; i < N; i++) {
+    for (std::size_t i = 0; i < words.size(); i++) {
         auto e_itr = find(b_itr, std::end(text), END_MARKER) + 1;
         words[i] = text.substr(std::distance(std::begin(text), b_itr), std::distance(b_itr, e_itr));
         b_itr = e_itr;

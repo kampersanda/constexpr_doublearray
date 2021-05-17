@@ -40,4 +40,8 @@ message(STATUS "CXX_FLAGS_RELEASE are ${CMAKE_CXX_FLAGS_RELEASE}")
 include_directories(include)
 
 add_executable(sample sample/sample.cpp)
+
+add_executable(runtime_sample sample/runtime_sample.cpp)
+set_target_properties(runtime_sample PROPERTIES COMPILE_DEFINITIONS "CXPRDA_DISABLE_CONSTEXPR")
+
 add_executable(demo demo/demo.cpp)
