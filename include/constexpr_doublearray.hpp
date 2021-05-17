@@ -7,12 +7,12 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string_view>
+#include <vector>
 
 #include "fixed_capacity_vector"
 
 #ifdef CXPRDA_DISABLE_CONSTEXPR
 #define CXPRDA_CONSTEXPR
-#include <vector>
 #else
 #define CXPRDA_CONSTEXPR constexpr
 #endif
@@ -64,7 +64,6 @@ constexpr std::size_t get_num_words(const std::string_view& text) {
     return n;
 }
 
-#ifndef CXPRDA_DISABLE_CONSTEXPR
 template <std::size_t N>
 constexpr auto text_to_words(const std::string_view& text) {
     if (text.back() != END_MARKER) {
@@ -79,21 +78,6 @@ constexpr auto text_to_words(const std::string_view& text) {
     }
     return words;
 }
-#else
-auto text_to_words(const std::string_view& text) {
-    if (text.back() != END_MARKER) {
-        throw std::logic_error("The input text has to be terminated by NULL character.");
-    }
-    std::vector<std::string_view> words(get_num_words(text));
-    auto b_itr = std::begin(text);
-    for (std::size_t i = 0; i < words.size(); i++) {
-        auto e_itr = find(b_itr, std::end(text), END_MARKER) + 1;
-        words[i] = text.substr(std::distance(std::begin(text), b_itr), std::distance(b_itr, e_itr));
-        b_itr = e_itr;
-    }
-    return words;
-}
-#endif
 
 template <class Words>
 constexpr std::size_t get_max_length(const Words& words) {
@@ -105,6 +89,24 @@ constexpr std::size_t get_max_length(const Words& words) {
 }
 
 }  // namespace utils
+
+namespace dynamic::utils {
+
+auto text_to_words(const std::string_view& text) {
+    if (text.back() != END_MARKER) {
+        throw std::logic_error("The input text has to be terminated by NULL character.");
+    }
+    std::vector<std::string_view> words(::constexpr_doublearray::utils::get_num_words(text));
+    auto b_itr = std::begin(text);
+    for (std::size_t i = 0; i < words.size(); i++) {
+        auto e_itr = std::find(b_itr, std::end(text), END_MARKER) + 1;
+        words[i] = text.substr(std::distance(std::begin(text), b_itr), std::distance(b_itr, e_itr));
+        b_itr = e_itr;
+    }
+    return words;
+}
+
+}  // namespace dynamic::utils
 
 namespace details {
 
@@ -321,23 +323,12 @@ CXPRDA_CONSTEXPR std::size_t get_capacity(const Words& words) {
     return (static_cast<std::size_t>(num_nodes * RESERVE_FACTOR) + 255) / 256 * 256;
 }
 
-#ifndef CXPRDA_DISABLE_CONSTEXPR
 template <std::size_t Capacity, class Words>
 constexpr auto make(const Words& words) {
     using units_type = static_vector<details::unit<>, Capacity>;
     details::builder<Words, units_type> b(words);
     return b.steal_units();
 }
-#else
-template <class Words>
-auto make(const Words& words) {
-    using units_type = std::vector<details::unit<>>;
-    details::builder<Words, units_type> b(words);
-    auto units = b.steal_units();
-    units.shrink_to_fit();
-    return units;
-}
-#endif
 
 struct search_result {
     std::size_t id;
@@ -365,8 +356,6 @@ CXPRDA_CONSTEXPR search_result search(const Word& word, const Units& units) {
     }
     return {static_cast<std::size_t>(units[cpos].base), cpos, depth + 1};
 }
-
-#ifndef CXPRDA_DISABLE_CONSTEXPR
 
 template <std::size_t BufSize, class Word, class Units>
 constexpr auto common_prefix_search(const Word& word, const Units& units) {
@@ -477,7 +466,16 @@ constexpr auto decode(std::size_t npos, const Units& units) {
     return word;
 }
 
-#else
+namespace dynamic {
+
+template <class Words>
+auto make(const Words& words) {
+    using units_type = std::vector<details::unit<>>;
+    details::builder<Words, units_type> b(words);
+    auto units = b.steal_units();
+    units.shrink_to_fit();
+    return units;
+}
 
 template <class Word, class Units>
 auto common_prefix_search(const Word& word, const Units& units) {
@@ -565,10 +563,10 @@ auto decode(std::size_t npos, const Units& units) {
         }
         npos = ppos;
     }
-    utils::reverse(word.begin(), word.end());
+    std::reverse(word.begin(), word.end());
     return word;
 }
 
-#endif
+}  // namespace dynamic
 
 }  // namespace constexpr_doublearray

@@ -16,10 +16,10 @@ int main() {
                       "SIGMOD\0"sv;
 
     // Convert the text to the array of words
-    const auto words = constexpr_doublearray::utils::text_to_words(text);
+    const auto words = constexpr_doublearray::dynamic::utils::text_to_words(text);
 
     // Double-array dictionary
-    const auto dict = constexpr_doublearray::make(words);
+    const auto dict = constexpr_doublearray::dynamic::make(words);
 
     // Simple search
     const auto icde_sr = constexpr_doublearray::search("ICDE"sv, dict);
@@ -31,28 +31,28 @@ int main() {
     std::cout << "search(SIGKDD) = " << sigkdd_sr.id << std::endl;
 
     // Decoding
-    const auto icde_dec = constexpr_doublearray::decode(icde_sr.npos, dict);
-    const auto sigmod_dec = constexpr_doublearray::decode(sigmod_sr.npos, dict);
+    const auto icde_dec = constexpr_doublearray::dynamic::decode(icde_sr.npos, dict);
+    const auto sigmod_dec = constexpr_doublearray::dynamic::decode(sigmod_sr.npos, dict);
 
     std::cout << "decode(icde_sr) = " << std::string(std::begin(icde_dec), std::end(icde_dec)) << std::endl;
     std::cout << "decode(sigmod_sr) = " << std::string(std::begin(sigmod_dec), std::end(sigmod_dec)) << std::endl;
 
     // Common prefix search
-    const auto icdmw_cpsr = constexpr_doublearray::common_prefix_search("ICDMW"sv, dict);
+    const auto icdmw_cpsr = constexpr_doublearray::dynamic::common_prefix_search("ICDMW"sv, dict);
 
     std::cout << "common_prefix_search(ICDMW) = ";
     for (auto r : icdmw_cpsr) {
-        const auto dec = constexpr_doublearray::decode(r.npos, dict);
+        const auto dec = constexpr_doublearray::dynamic::decode(r.npos, dict);
         std::cout << "(id=" << r.id << ",str=" << std::string(std::begin(dec), std::end(dec)) << "), ";
     }
     std::cout << std::endl;
 
     // Predictive search
-    const auto sig_psr = constexpr_doublearray::predictive_search("SIG"sv, dict);
+    const auto sig_psr = constexpr_doublearray::dynamic::predictive_search("SIG"sv, dict);
 
     std::cout << "predictive_search(SIG) = ";
     for (auto r : sig_psr) {
-        const auto dec = constexpr_doublearray::decode(r.npos, dict);
+        const auto dec = constexpr_doublearray::dynamic::decode(r.npos, dict);
         std::cout << "(id=" << r.id << ",str=" << std::string(std::begin(dec), std::end(dec)) << "), ";
     }
     std::cout << std::endl;
