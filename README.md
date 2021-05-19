@@ -67,7 +67,7 @@ constexpr auto words = constexpr_doublearray::utils::text_to_words<num_words>(te
 ### Construction
 
 ```c++
-// Double-array dictionary
+// Double-array dictionary that maps words to ids 0..num_words-1 in this order.
 constexpr auto capacity = constexpr_doublearray::get_capacity(words);
 constexpr auto dict = constexpr_doublearray::make<capacity>(words);
 ```

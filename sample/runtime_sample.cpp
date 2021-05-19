@@ -18,7 +18,7 @@ int main() {
     // Convert the text to the array of words
     const auto words = constexpr_doublearray::dynamic::utils::text_to_words(text);
 
-    // Double-array dictionary
+    // Double-array dictionary that maps words to ids 0..num_words-1 in this order.
     const auto dict = constexpr_doublearray::dynamic::make(words);
 
     // Simple search
